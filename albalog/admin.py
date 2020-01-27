@@ -1,9 +1,10 @@
 from django.contrib import admin
 
 # Register your models here.
+from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
 
-from albalog.models import User
+from albalog.models import User, Business, Member, Work
 
 
 class CustomeUserAdmin(UserAdmin):
@@ -16,4 +17,24 @@ class CustomeUserAdmin(UserAdmin):
     list_display = ('id', 'username', 'name', 'phone', 'sex')
 
 
+class BusinessAdmin(ModelAdmin):
+    list_display = ('id', 'license_name', 'license_number', 'address')
+
+
+class MemberAdmin(ModelAdmin):
+    list_display = ('id', 'business_name', 'user', 'member_name', 'type')
+
+    def business_name(self, obj):
+        return obj.business.license_name
+
+    def member_name(self, obj):
+        return obj.user.name
+
+
+class WorkAdmin(ModelAdmin):
+    list_display = ('id', 'member', 'hourly_wage', 'start_time', 'end_time', 'duration')
+
 admin.site.register(User, CustomeUserAdmin)
+admin.site.register(Business, BusinessAdmin)
+admin.site.register(Member, MemberAdmin)
+admin.site.register(Work, WorkAdmin)
