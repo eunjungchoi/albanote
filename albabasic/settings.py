@@ -40,8 +40,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
-    'albalog'
+    'albalog',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework.authentication',
+    'allauth',
+    'allauth.account',
+    'rest_auth',
+    'rest_auth.registration',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +139,24 @@ AUTH_USER_MODEL = 'albalog.User'
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
+
+SITE_ID = 1
+
+
+# all-auth configuration
+ACCOUNT_EMAIL_REQUIRED=False
+ACCOUNT_AUTHENTICATION_METHOD="username"
+ACCOUNT_USERNAME_REQUIRED=True
+ACCOUNT_EMAIL_VERIFICATION="none"
+# ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE=False

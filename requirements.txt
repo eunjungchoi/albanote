@@ -1,2 +1,7 @@
 Django==2.1.1
 pytz==2019.3
+sqlparse==0.3.0
+djangorestframework
+django-rest-auth
+django-allauth
+asgiref==3.2.3
