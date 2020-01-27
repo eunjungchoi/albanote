@@ -15,10 +15,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
 
-from albabasic import views
+from albalog import api, views
+
+router = routers.DefaultRouter()
+router.register('users', api.UserViewSet)
+router.register('businesses', api.BusinessViewSet)
+router.register('members', api.MemberViewSet)
+router.register('works', api.WorkViewSet)
 
 urlpatterns = [
+    path(r'api/v1/', include(router.urls)),
     path('admin/', admin.site.urls),
     path('rest-auth/', include('rest_auth.urls')),
     path('rest-auth/registration/', include('rest_auth.registration.urls')),
