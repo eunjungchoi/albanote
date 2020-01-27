@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'albalog'
 ]
 
 MIDDLEWARE = [
@@ -124,3 +125,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = 'static'
 
+
+AUTH_USER_MODEL = 'albalog.User'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+)
