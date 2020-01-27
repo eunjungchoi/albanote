@@ -5,3 +5,4 @@ djangorestframework
 django-rest-auth
 django-allauth
 asgiref==3.2.3
+django-cors-headers
