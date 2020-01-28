@@ -106,9 +106,18 @@ class WorkViewSet(viewsets.ModelViewSet):
     serializer_class = WorkSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(member__user=self.request.user)
+        queryset = super().get_queryset()
         if 'business' in self.request.query_params:
-            queryset = queryset.filter(member__business__id=self.request.query_params['business'])
+            business = Business.objects.get(id=self.request.query_params['business'])
+            queryset = queryset.filter(member__business__id=business.id)
+            member = Member.objects.get(user=self.request.user, business=business)
+
+            if member.type == 'member':
+                queryset = queryset.filter(member__user=self.request.user)
+
+        else:
+            queryset = queryset.filter(member__user=self.request.user)
+
         queryset = queryset.order_by('-start_time')
         return queryset
 
