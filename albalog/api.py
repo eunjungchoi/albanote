@@ -56,7 +56,7 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type')
+        fields = ('id', 'business', 'user', 'type', 'created')
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -65,6 +65,32 @@ class MemberViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(user=self.request.user)
+
+    @action(['get'], detail=False)
+    def all_members_of_business(self, request):
+        business_id = request.query_params['business']
+        member = Member.objects.filter(user=request.user, business__id=int(business_id))[0]
+        if member.type != 'manager':
+            return JsonResponse({ 'error': '직원 목록은 관리자만 볼 수 있습니다'})
+
+        queryset = self.queryset.filter(business__id=request.query_params['business'])
+        serializer = self.get_serializer(queryset, many=True)
+        return JsonResponse(serializer.data, safe=False)
+
+    def create(self, request, *args, **kwargs):
+        new_user = User.objects.get(username=request.data['user_id'])
+        business = Business.objects.get(id=request.data['business_id'])
+
+        me = Member.objects.get(user=request.user, business=business)
+        if me.type != 'manager':
+            return JsonResponse({ 'error': '직원 추가는 관리자만 가능합니다'})
+
+        member = Member.objects.create(
+            user=new_user,
+            business=business,
+            type=request.data['type']
+        )
+        return JsonResponse(MemberSerialzer(member).data)
 
 
 class WorkSerializer(serializers.ModelSerializer):
