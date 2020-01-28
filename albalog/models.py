@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -47,4 +48,6 @@ class Work(models.Model):
 
 @receiver(pre_save, sender=Work)
 def calculate_hours_worked(sender, instance, **kwargs):
-    instance.duration = instance.end_time - instance.start_time
+    start = datetime.strptime(instance.start_time, '%Y-%m-%dT%H:%M')
+    end = datetime.strptime(instance.end_time, '%Y-%m-%dT%H:%M')
+    instance.duration = end - start

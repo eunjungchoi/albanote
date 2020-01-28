@@ -70,3 +70,15 @@ class WorkViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(member__business__id=self.request.query_params['business'])
         queryset = queryset.order_by('-start_time')
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        business_id = request.data['business_id']
+        member = Member.objects.get(user=request.user, business__id=business_id)
+        work = Work.objects.create(
+            member=member,
+            hourly_wage=int(request.data['hourly_wage']),
+            start_time=request.data['start_time'],
+            end_time=request.data['end_time'],
+        )
+        return JsonResponse(WorkSerializer(work).data)
+
