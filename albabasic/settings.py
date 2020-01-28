@@ -30,6 +30,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    '172.31.18.211',
     '.elasticbeanstalk.com',
 ]
 
@@ -44,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.sites',
     'django.contrib.staticfiles',
-    'albalog',
+    'albalog.apps.AlbalogConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework.authentication',
@@ -141,6 +142,7 @@ STATIC_ROOT = 'static'
 AUTH_USER_MODEL = 'albalog.User'
 
 AUTHENTICATION_BACKENDS = (
+    "allauth.account.auth_backends.AuthenticationBackend",
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -179,5 +181,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:8080',
-    'http://127.0.0.1:8080'
+    'http://127.0.0.1:8080',
+    '172.31.18.211'
 ]
+
+APPEND_SLASH = True
