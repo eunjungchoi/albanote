@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from requests import Response
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
@@ -33,6 +32,22 @@ class BusinessSerialzer(serializers.ModelSerializer):
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
     serializer_class = BusinessSerialzer
+
+    def create(self, request, *args, **kwargs):
+        business = Business.objects.create(
+            license_name=request.data['license_name'],
+            license_number=request.data['license_number'],
+            address=request.data['address']
+        )
+        member = Member.objects.create(
+            business=business,
+            user=request.user,
+            type='manager'
+        )
+        return JsonResponse({
+            'business': BusinessSerialzer(business).data,
+            'member': MemberSerialzer(member).data
+        })
 
 
 class MemberSerialzer(serializers.ModelSerializer):
