@@ -56,7 +56,7 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'created')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'created')
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -98,7 +98,7 @@ class WorkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Work
-        fields = ('member', 'start_time', 'end_time', 'duration', 'hourly_wage')
+        fields = ('member', 'start_time', 'end_time', 'duration')
 
 
 class WorkViewSet(viewsets.ModelViewSet):
@@ -126,7 +126,6 @@ class WorkViewSet(viewsets.ModelViewSet):
         member = Member.objects.get(user=request.user, business__id=business_id)
         work = Work.objects.create(
             member=member,
-            hourly_wage=int(request.data['hourly_wage']),
             start_time=request.data['start_time'],
             end_time=request.data['end_time'],
         )

@@ -31,6 +31,7 @@ class Member(models.Model):
     type = models.CharField(choices=Types, max_length=10)
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    hourly_wage = models.IntegerField(blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -40,10 +41,11 @@ class Member(models.Model):
 
 class Work(models.Model):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
-    hourly_wage = models.IntegerField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     duration = models.DurationField(blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
 
 @receiver(pre_save, sender=Work)

@@ -22,7 +22,7 @@ class BusinessAdmin(ModelAdmin):
 
 
 class MemberAdmin(ModelAdmin):
-    list_display = ('id', 'business_name', 'user', 'member_name', 'type')
+    list_display = ('id', 'business_name', 'user', 'member_name', 'type', 'hourly_wage')
 
     def business_name(self, obj):
         return obj.business.license_name
@@ -32,7 +32,7 @@ class MemberAdmin(ModelAdmin):
 
 
 class WorkAdmin(ModelAdmin):
-    list_display = ('id', 'member', 'hourly_wage', 'start_time', 'end_time', 'duration')
+    list_display = ('id', 'member', 'start_time', 'end_time', 'duration')
 
 admin.site.register(User, CustomeUserAdmin)
 admin.site.register(Business, BusinessAdmin)
