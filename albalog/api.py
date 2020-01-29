@@ -85,10 +85,11 @@ class MemberViewSet(viewsets.ModelViewSet):
         if me.type != 'manager':
             return JsonResponse({ 'error': '직원 추가는 관리자만 가능합니다'})
 
+        type = 'member'  # 관리자 1명을 제외한 모든 근로자는 일반 직원으로 분류
         member = Member.objects.create(
             user=new_user,
             business=business,
-            type=request.data['type']
+            type=type
         )
         return JsonResponse(MemberSerialzer(member).data)
 

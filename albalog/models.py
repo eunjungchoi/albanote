@@ -28,7 +28,7 @@ class Member(models.Model):
         ('manager', '관리자'),
         ('member', '일반직원')
     ]
-    type = models.CharField(choices=Types, max_length=10)
+    type = models.CharField(choices=Types, max_length=10, default='member')
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     hourly_wage = models.IntegerField(blank=True)
