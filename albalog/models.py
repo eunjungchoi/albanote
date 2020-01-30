@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -76,7 +76,36 @@ class Work(models.Model):
 
 
 @receiver(pre_save, sender=Work)
-def calculate_hours_worked(sender, instance, **kwargs):
-    start = datetime.strptime(instance.start_time, '%Y-%m-%dT%H:%M')
-    end = datetime.strptime(instance.end_time, '%Y-%m-%dT%H:%M')
-    instance.duration = end - start
+def calculate_duration_and_late_come(sender, instance, **kwargs):
+    work_start = datetime.strptime(instance.start_time, '%Y-%m-%dT%H:%M')
+    work_end = datetime.strptime(instance.end_time, '%Y-%m-%dT%H:%M')
+    instance.duration = work_end - work_start
+
+    day = work_start.weekday()
+    timetables = TimeTable.objects.filter(member=instance.member, day=day)
+
+    for timetable in timetables:
+        # 출근 기준: 해당 근무내역의 시작시간이 시간표의 종료시간보다 작아야 한다 AND 근무내역 종료시간이 시간표의 시작시간보다 커야 한다.
+        diff1 = datetime.combine(date.today(), timetable.end_time) - datetime.combine(date.today(), work_start.time())
+        diff1_minutes = diff1.total_seconds() / 60
+
+        diff2 = datetime.combine(date.today(), work_end.time()) - datetime.combine(date.today(), timetable.start_time)
+        diff2_minutes = diff2.total_seconds() / 60
+
+        if diff1_minutes and diff2_minutes:
+            # 출근
+            instance.timetable = timetable
+
+            # 지각: 근무내역 시작시간이 시간표 시작시간 보다 크면 (=늦으면)
+            late_come = datetime.combine(date.today(), work_start.time()) - datetime.combine(date.today(), timetable.start_time)
+            late_come_to_minutes = late_come.total_seconds() / 60
+            if late_come_to_minutes > 0:
+                instance.late_come = late_come
+
+            # 조퇴: 근무내역 종료시간이 시간표 종료시간보다 작으면 (=이르면)
+            leave_early = datetime.combine(date.today(), timetable.end_time) - datetime.combine(date.today(), work_end.time())
+            leave_early_to_minutes = leave_early.total_seconds() / 60
+            if leave_early_to_minutes > 0:
+                instance.early_leave = leave_early
+
+            break
