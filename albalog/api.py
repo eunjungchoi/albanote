@@ -3,7 +3,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 
-from albalog.models import User, Business, Member, Work
+from albalog.models import User, Business, Member, Work, TimeTable
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -92,6 +92,35 @@ class MemberViewSet(viewsets.ModelViewSet):
             type=type
         )
         return JsonResponse(MemberSerialzer(member).data)
+
+
+class TimeTableSerializer(serializers.ModelSerializer):
+    member = MemberSerialzer()
+
+    class Meta:
+        model = TimeTable
+        fields = ('member', 'day', 'start_time', 'end_time')
+
+
+class TimeTableViewSet(viewsets.ModelViewSet):
+    queryset = TimeTable.objects.all()
+    serializer_class = TimeTableSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if 'business' in self.request.query_params:
+            business = Business.objects.get(id=self.request.query_params['business'])
+            queryset = queryset.filter(member__business__id=business.id)
+            member = Member.objects.get(user=self.request.user, business=business)
+
+            if member.type == 'member':
+                queryset = queryset.filter(member__user=self.request.user)
+
+        else:
+            queryset = queryset.filter(member__user=self.request.user)
+
+        queryset = queryset.order_by('day')
+        return queryset
 
 
 class WorkSerializer(serializers.ModelSerializer):

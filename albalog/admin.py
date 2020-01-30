@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin
 
-from albalog.models import User, Business, Member, Work
+from albalog.models import User, Business, Member, Work, TimeTable
 
 
 class CustomeUserAdmin(UserAdmin):
@@ -34,7 +34,16 @@ class MemberAdmin(ModelAdmin):
 class WorkAdmin(ModelAdmin):
     list_display = ('id', 'member', 'start_time', 'end_time', 'duration')
 
+
+class TimeTableAdmin(ModelAdmin):
+    list_display = ('id', 'member_name', 'day', 'start_time', 'end_time')
+
+    def member_name(self, obj):
+        return obj.member.business.license_name + '_' + obj.member.user.name
+
+
 admin.site.register(User, CustomeUserAdmin)
 admin.site.register(Business, BusinessAdmin)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(Work, WorkAdmin)
+admin.site.register(TimeTable, TimeTableAdmin)

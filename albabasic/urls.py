@@ -24,6 +24,7 @@ router.register('users', api.UserViewSet)
 router.register('businesses', api.BusinessViewSet)
 router.register('members', api.MemberViewSet)
 router.register('works', api.WorkViewSet)
+router.register('timetables', api.TimeTableViewSet)
 
 urlpatterns = [
     path(r'api/v1/', include(router.urls)),

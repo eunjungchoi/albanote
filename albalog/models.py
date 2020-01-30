@@ -22,6 +22,9 @@ class Business(models.Model):
     license_number = models.CharField(max_length=20)
     address = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.license_name
+
 
 class Member(models.Model):
     Types = [
@@ -37,6 +40,22 @@ class Member(models.Model):
 
     def __str__(self):
         return self.business.license_name + '_' + self.user.name
+
+
+class TimeTable(models.Model):
+    DAYS_OF_WEEK = (
+        ('1', '월'),
+        ('2', '화'),
+        ('3', '수'),
+        ('4', '목'),
+        ('5', '금'),
+        ('6', '토'),
+        ('7', '일'),
+    )
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
+    day = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
 
 class Work(models.Model):
