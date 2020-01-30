@@ -68,6 +68,9 @@ class Work(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     duration = models.DurationField(blank=True, null=True)
+    timetable = models.ForeignKey(TimeTable, null=True, on_delete=models.DO_NOTHING)
+    late_come = models.DurationField(blank=True, null=True)
+    early_leave = models.DurationField(blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

@@ -128,7 +128,7 @@ class WorkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Work
-        fields = ('member', 'start_time', 'end_time', 'duration')
+        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'early_leave')
 
 
 class WorkViewSet(viewsets.ModelViewSet):
