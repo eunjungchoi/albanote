@@ -31,10 +31,15 @@ class Member(models.Model):
         ('manager', '관리자'),
         ('member', '일반직원')
     ]
+    Statuses = [
+        ('active', '재직중'),
+        ('inactive', '퇴사')
+    ]
     type = models.CharField(choices=Types, max_length=10, default='member')
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     hourly_wage = models.IntegerField(blank=True)
+    status = models.CharField(choices=Statuses, max_length=10, default='active')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
