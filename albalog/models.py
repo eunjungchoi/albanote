@@ -29,17 +29,18 @@ class Business(models.Model):
 class Member(models.Model):
     Types = [
         ('manager', '관리자'),
-        ('member', '일반직원')
+        ('member', '일반직원'),
     ]
     Statuses = [
         ('active', '재직중'),
-        ('inactive', '퇴사')
+        ('inactive', '퇴사'),
     ]
     type = models.CharField(choices=Types, max_length=10, default='member')
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     hourly_wage = models.IntegerField(blank=True)
     status = models.CharField(choices=Statuses, max_length=10, default='active')
+    resignation_date = models.DateField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -55,7 +56,7 @@ class TimeTable(models.Model):
         ('3', '목'),
         ('4', '금'),
         ('5', '토'),
-        ('6', '일'),
+        ('6', '일')
     )
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
     day = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
