@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime, timedelta
 
 from django.db.models import Sum
@@ -195,30 +196,32 @@ class WorkViewSet(viewsets.ModelViewSet):
             member = me
         queryset = queryset.filter(member=member)
 
-        # 월급 구간 설정
         from datetime import date
-        # TODO request.query_params에 'year', 'month'가 있으면 그값을 가져온다
-        # today = datetime.today()
-        today = date(2020, 2, 1)
 
-        first_day_of_this_month = today.replace(day=1)
-        last_day_of_prev_month = first_day_of_this_month - timedelta(days=1)
-        first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
+        if 'year' in request.query_params and 'month' in request.query_params:
+            year = int(request.query_params['year'])
+            month = int(request.query_params['month'])
+        else:
+            today = datetime.today()
+            year = today.year
+            month = today.month
+
+        last_day_of_month = date(year, month, calendar.monthrange(year, month)[1])
 
         # 기본급 계산
-        total_hours, base_salary = self.calcuate_base_salary(queryset, member, first_day_of_prev_month)
+        total_hours, base_salary = self.calcuate_base_salary(queryset, member, year, month)
 
         # 2) 주휴수당 계산:
         주휴수당 = []
         key_dates = [1, 8, 15, 22, 29]
         for key_date in key_dates:
             from datetime import date
-            date = date(first_day_of_prev_month.year, first_day_of_prev_month.month, key_date) - timedelta(days=1)
+            date = date(year, month, key_date) - timedelta(days=1)
             start = date - timedelta(days=date.weekday())  # 월요일부터
             end = start + timedelta(days=6)  # 일요일까지
             pay = 0
 
-            if last_day_of_prev_month <= end:
+            if last_day_of_month <= end:
                 break
             weekly_total_hours = self.weekly_total_hours(queryset, start, end)
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member) and member.status == 'active':
@@ -230,8 +233,8 @@ class WorkViewSet(viewsets.ModelViewSet):
 
         total_monthly_pay = base_salary + total_extra_pay
         data = {
-                'year': first_day_of_prev_month.year,
-                'month': first_day_of_prev_month.month,
+                'year': year,
+                'month': month,
                 'total_hours': total_hours,
                 'total_monthly_pay': total_monthly_pay,
                 'base_salary': base_salary,
@@ -240,8 +243,8 @@ class WorkViewSet(viewsets.ModelViewSet):
         return JsonResponse(data)
 
 
-    def calcuate_base_salary(self, queryset, member, first_day_of_prev_month):
-        queryset = queryset.filter(start_time__year=first_day_of_prev_month.year, start_time__month=first_day_of_prev_month.month)
+    def calcuate_base_salary(self, queryset, member, year, month):
+        queryset = queryset.filter(start_time__year=year, start_time__month=month)
         total_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
