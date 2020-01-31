@@ -206,7 +206,7 @@ class WorkViewSet(viewsets.ModelViewSet):
         first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
 
         # 기본급 계산
-        base_salary = self.calcuate_base_salary(queryset, member, first_day_of_prev_month)
+        total_hours, base_salary = self.calcuate_base_salary(queryset, member, first_day_of_prev_month)
 
         # 2) 주휴수당 계산:
         주휴수당 = []
@@ -232,6 +232,7 @@ class WorkViewSet(viewsets.ModelViewSet):
         data = {
                 'year': first_day_of_prev_month.year,
                 'month': first_day_of_prev_month.month,
+                'total_hours': total_hours,
                 'total_monthly_pay': total_monthly_pay,
                 'base_salary': base_salary,
                 'total_extra_pay': total_extra_pay,
@@ -244,8 +245,8 @@ class WorkViewSet(viewsets.ModelViewSet):
         total_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
-            return total_hours * member.hourly_wage
-        return 0
+            return total_hours, total_hours * member.hourly_wage
+        return 0, 0
 
     def weekly_total_hours(self, queryset, start, end):
         queryset = queryset.filter(start_time__gte=start, end_time__lte=end)
