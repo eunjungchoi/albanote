@@ -96,12 +96,20 @@ DATABASES = {
     #     'ENGINE': 'django.db.backends.sqlite3',
     #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     # },
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': 'albanotedb',
+    #     'USER': 'albanote',
+    #     'PASSWORD': 'dkfqkshxm1',
+    #     'HOST': '127.0.0.1',
+    #     'PORT': '5432',
+    # },
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'albanotedb',
-        'USER': 'albanote',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
         'PASSWORD': 'dkfqkshxm1',
-        'HOST': '127.0.0.1',
+        'HOST': 'albanote.cs4rdk7drieh.us-west-2.rds.amazonaws.com',
         'PORT': '5432',
     }
 }
