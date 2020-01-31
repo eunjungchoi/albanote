@@ -59,7 +59,7 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'created')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'created')
 
 
 class MemberViewSet(viewsets.ModelViewSet):
@@ -148,7 +148,7 @@ class WorkSerializer(serializers.ModelSerializer):
 
 
 class WorkViewSet(viewsets.ModelViewSet):
-    queryset = Work.objects.all()
+    queryset = Work.objects
     serializer_class = WorkSerializer
 
     def get_queryset(self):
