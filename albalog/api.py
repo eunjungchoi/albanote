@@ -1,3 +1,6 @@
+from datetime import datetime, timedelta
+
+from django.db.models import Sum
 from django.http import JsonResponse
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
@@ -174,3 +177,85 @@ class WorkViewSet(viewsets.ModelViewSet):
         )
         return JsonResponse(WorkSerializer(work).data)
 
+    @action(['get'], detail=False)
+    def get_monthly_salary(self, request):
+        queryset = super().get_queryset()
+        business = Business.objects.get(id=request.query_params['business'])
+        me = Member.objects.get(business=business, user=request.user)
+        if 'member' in request.query_params and me.type == 'manager':
+            member = Member.objects.filter(business=business).get(id=request.query_params['member'])
+        else:
+            member = me
+        queryset = queryset.filter(member=member)
+
+        # 월급 구간 설정
+        from datetime import date
+        # TODO request.query_params에 'year', 'month'가 있으면 그값을 가져온다
+        # today = datetime.today()
+        today = date(2020, 2, 1)
+
+        first_day_of_this_month = today.replace(day=1)
+        last_day_of_prev_month = first_day_of_this_month - timedelta(days=1)
+        first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
+
+        # 기본급 계산
+        base_salary = self.calcuate_base_salary(queryset, member, first_day_of_prev_month)
+
+        # 2) 주휴수당 계산:
+        주휴수당 = []
+        key_dates = [1, 8, 15, 22, 29]
+        for key_date in key_dates:
+            from datetime import date
+            date = date(first_day_of_prev_month.year, first_day_of_prev_month.month, key_date) - timedelta(days=1)
+            start = date - timedelta(days=date.weekday())  # 월요일부터
+            end = start + timedelta(days=6)  # 일요일까지
+
+            pay = 0
+            weekly_total_hours = self.weekly_total_hours(queryset, start, end)
+            if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member) and member.status == 'active':
+                pay = self.calculate_extra_pay(weekly_total_hours)
+
+            주휴수당.append(pay)
+
+        total_extra_pay = sum(주휴수당)
+
+        total_monthly_pay = base_salary + total_extra_pay
+        data = {'total_monthly_pay': total_monthly_pay,
+                'base_salary': base_salary,
+                'total_extra_pay': total_extra_pay,
+                'extra_pay_list': 주휴수당 }
+        return JsonResponse(data)
+
+
+    def calcuate_base_salary(self, queryset, member, first_day_of_prev_month):
+        queryset = queryset.filter(start_time__year=first_day_of_prev_month.year, start_time__month=first_day_of_prev_month.month)
+        total_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
+        if total_work_duration:
+            total_hours = total_work_duration.total_seconds() // 3600
+            return total_hours * member.hourly_wage
+        return 0
+
+    def weekly_total_hours(self, queryset, start, end):
+        queryset = queryset.filter(start_time__gte=start, end_time__lte=end)
+        weekly_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
+        if weekly_work_duration:
+            return weekly_work_duration.total_seconds() // 3600
+        return 0
+
+    def attend_all(self, queryset, start, end, member):
+        queryset = queryset.filter(start_time__gte=start, end_time__lte=end).order_by('start_time')
+        timetables = TimeTable.objects.filter(member=member).order_by('day')
+
+        queryset = queryset.exclude(timetable=None)
+        if queryset.count() == timetables.count():
+            return True
+
+        absent_count = timetables.count() - queryset.count()
+        return False
+
+    def calculate_extra_pay(self, weekly_total_hours, member):  # 주휴수당 계산
+        if weekly_total_hours >= 40:
+            return 8 * member.hourly_wage
+
+        daily_average_hours = weekly_total_hours / 5
+        return daily_average_hours * member.hourly_wage
