@@ -109,3 +109,12 @@ def calculate_duration_and_late_come(sender, instance, **kwargs):
                 instance.early_leave = leave_early
 
             break
+
+
+class PayRoll(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
+    year = models.IntegerField()
+    month = models.IntegerField()
+    total_monthly_salary = models.IntegerField()
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
