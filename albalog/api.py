@@ -57,10 +57,15 @@ class BusinessViewSet(viewsets.ModelViewSet):
 class MemberSerialzer(serializers.ModelSerializer):
     business = BusinessSerialzer()
     user = UserSerializer()
+    latest_work_date = serializers.SerializerMethodField('latest_work')
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'created')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'latest_work_date', 'created')
+
+    def latest_work(self, obj):
+        work = Work.objects.filter(member=obj).last()
+        return work.start_time
 
 
 class MemberViewSet(viewsets.ModelViewSet):
