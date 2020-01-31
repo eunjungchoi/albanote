@@ -122,6 +122,19 @@ class TimeTableViewSet(viewsets.ModelViewSet):
         queryset = queryset.order_by('day')
         return queryset
 
+    def create(self, request, *args, **kwargs):
+        business_id = request.data['business_id']
+        member = Member.objects.get(user=request.user, business__id=business_id)
+        days = request.data['day']
+        for day in days:
+            TimeTable.objects.create(
+                member=member,
+                day=day,
+                start_time=request.data['start_time'],
+                end_time=request.data['end_time'],
+            )
+        return JsonResponse({'result': 'success'})
+
 
 class WorkSerializer(serializers.ModelSerializer):
     member = MemberSerialzer()

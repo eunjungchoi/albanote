@@ -49,13 +49,13 @@ class Member(models.Model):
 
 class TimeTable(models.Model):
     DAYS_OF_WEEK = (
-        ('1', '월'),
-        ('2', '화'),
-        ('3', '수'),
-        ('4', '목'),
-        ('5', '금'),
-        ('6', '토'),
-        ('7', '일'),
+        ('0', '월'),
+        ('1', '화'),
+        ('2', '수'),
+        ('3', '목'),
+        ('4', '금'),
+        ('5', '토'),
+        ('6', '일'),
     )
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
     day = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
