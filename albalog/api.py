@@ -127,7 +127,14 @@ class TimeTableViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         business_id = request.data['business_id']
-        member = Member.objects.get(user=request.user, business__id=business_id)
+        me = Member.objects.get(user=request.user, business__id=business_id)
+        if me.type != 'manager':
+            return JsonResponse({ 'error': '직원 추가는 관리자만 가능합니다'})
+        if request.data['member']:
+            member = Member.objects.filter(business_id=business_id).get(id=request.data['member'])
+        else:
+            member = me
+
         days = request.data['day']
         for day in days:
             TimeTable.objects.create(
