@@ -209,18 +209,23 @@ class WorkViewSet(viewsets.ModelViewSet):
             date = date(first_day_of_prev_month.year, first_day_of_prev_month.month, key_date) - timedelta(days=1)
             start = date - timedelta(days=date.weekday())  # 월요일부터
             end = start + timedelta(days=6)  # 일요일까지
-
             pay = 0
+
+            if last_day_of_prev_month <= end:
+                break
             weekly_total_hours = self.weekly_total_hours(queryset, start, end)
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member) and member.status == 'active':
-                pay = self.calculate_extra_pay(weekly_total_hours)
+                pay = self.calculate_extra_pay(weekly_total_hours, member)
 
             주휴수당.append(pay)
 
         total_extra_pay = sum(주휴수당)
 
         total_monthly_pay = base_salary + total_extra_pay
-        data = {'total_monthly_pay': total_monthly_pay,
+        data = {
+                'year': first_day_of_prev_month.year,
+                'month': first_day_of_prev_month.month,
+                'total_monthly_pay': total_monthly_pay,
                 'base_salary': base_salary,
                 'total_extra_pay': total_extra_pay,
                 'extra_pay_list': 주휴수당 }
