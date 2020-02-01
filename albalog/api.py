@@ -225,17 +225,20 @@ class WorkViewSet(viewsets.ModelViewSet):
 
         # 2) 주휴수당 계산:
         주휴수당 = []
+        weekly_hours = {}
+
         key_dates = [1, 8, 15, 22, 29]
-        for key_date in key_dates:
+        for i, key_date in enumerate(key_dates):
             from datetime import date
             date = date(year, month, key_date) - timedelta(days=1)
             start = date - timedelta(days=date.weekday())  # 월요일부터
             end = start + timedelta(days=6)  # 일요일까지
             pay = 0
 
+            weekly_total_hours = self.weekly_total_hours(queryset, start, end)
+            weekly_hours[i] = weekly_total_hours
             if last_day_of_month <= end:
                 break
-            weekly_total_hours = self.weekly_total_hours(queryset, start, end)
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member) and member.status == 'active':
                 pay = self.calculate_extra_pay(weekly_total_hours, member)
 
@@ -248,10 +251,12 @@ class WorkViewSet(viewsets.ModelViewSet):
                 'year': year,
                 'month': month,
                 'total_hours': total_hours,
+                'weekly_hours': weekly_hours,
                 'total_monthly_pay': total_monthly_pay,
                 'base_salary': base_salary,
                 'total_extra_pay': total_extra_pay,
-                'extra_pay_list': 주휴수당 }
+                'extra_pay_list': 주휴수당
+        }
         return JsonResponse(data)
 
 
