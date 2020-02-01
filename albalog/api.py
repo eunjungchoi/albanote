@@ -201,15 +201,8 @@ class WorkViewSet(viewsets.ModelViewSet):
     def get_monthly_salary(self, request):
         queryset = super().get_queryset()
         business = Business.objects.get(id=request.query_params['business'])
-        me = Member.objects.get(business=business, user=request.user)
-        if 'member' in request.query_params and me.type == 'manager':
-            member = Member.objects.filter(business=business).get(id=request.query_params['member'])
-        else:
-            member = me
-        queryset = queryset.filter(member=member)
 
         from datetime import date
-
         if 'year' in request.query_params and 'month' in request.query_params:
             year = int(request.query_params['year'])
             month = int(request.query_params['month'])
@@ -217,9 +210,29 @@ class WorkViewSet(viewsets.ModelViewSet):
             today = datetime.today()
             year = today.year
             month = today.month
-
         last_day_of_month = date(year, month, calendar.monthrange(year, month)[1])
 
+        me = Member.objects.get(business=business, user=request.user)
+        if me.type == 'manager':
+            members = Member.objects.filter(business=business)
+        else:
+            members = [me]
+
+        all_members_salary = []
+        for member in members:
+            member_salary = self.calcualate_monthly_salary(queryset, member, year, month, last_day_of_month)
+            all_members_salary.append(member_salary)
+
+        salary_data = {
+                'year': year,
+                'month': month,
+                'members': all_members_salary
+        }
+        return JsonResponse(salary_data)
+
+
+    def calcualate_monthly_salary(self, queryset, member, year, month, last_day_of_month):
+        queryset = queryset.filter(member=member)
         # 기본급 계산
         total_hours, base_salary = self.calcuate_base_salary(queryset, member, year, month)
 
@@ -236,29 +249,30 @@ class WorkViewSet(viewsets.ModelViewSet):
             pay = 0
 
             weekly_total_hours = self.weekly_total_hours(queryset, start, end)
-            weekly_hours[i] = weekly_total_hours
+            weekly_hours[start.strftime('%Y-%m-%d')] = weekly_total_hours
+
             if last_day_of_month <= end:
                 break
-            if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member) and member.status == 'active':
+
+            if member.resignation_date and member.resignation_date <= end:
+                break
+
+            if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member):
                 pay = self.calculate_extra_pay(weekly_total_hours, member)
 
             주휴수당.append(pay)
 
         total_extra_pay = sum(주휴수당)
-
         total_monthly_pay = base_salary + total_extra_pay
-        data = {
-                'year': year,
-                'month': month,
-                'total_hours': total_hours,
-                'weekly_hours': weekly_hours,
-                'total_monthly_pay': total_monthly_pay,
-                'base_salary': base_salary,
-                'total_extra_pay': total_extra_pay,
-                'extra_pay_list': 주휴수당
+        return {
+            'id': member.id,
+            'total_hours': total_hours,
+            'weekly_hours': weekly_hours,
+            'total_monthly_pay': total_monthly_pay,
+            'base_salary': base_salary,
+            'total_extra_pay': total_extra_pay,
+            'extra_pay_list': 주휴수당
         }
-        return JsonResponse(data)
-
 
     def calcuate_base_salary(self, queryset, member, year, month):
         queryset = queryset.filter(start_time__year=year, start_time__month=month)
