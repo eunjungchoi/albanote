@@ -181,6 +181,9 @@ class WorkViewSet(viewsets.ModelViewSet):
         else:
             queryset = queryset.filter(member__user=self.request.user)
 
+        if 'year' in self.request.query_params and 'month' in self.request.query_params:
+            queryset = queryset.filter(start_time__year=self.request.query_params['year'], start_time__month=self.request.query_params['month'])
+
         queryset = queryset.order_by('-start_time')
         return queryset
 
