@@ -65,7 +65,10 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     def latest_work(self, obj):
         work = Work.objects.filter(member=obj).last()
-        return work.start_time
+        if work:
+            return work.start_time
+        else:
+            return None
 
 
 class MemberViewSet(viewsets.ModelViewSet):
