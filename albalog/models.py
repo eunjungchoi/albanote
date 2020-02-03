@@ -72,13 +72,13 @@ class Attendance(models.Model):
         (3, '무단결근'),
     ]
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
-    duration = models.DurationField(blank=True, null=True)
+    start_time = models.DateTimeField('출근일시', null=True, blank=True)
+    end_time = models.DateTimeField('퇴근일시', null=True, blank=True)
+    duration = models.DurationField('근무시간', blank=True, null=True)
     date = models.DateField('날짜', null=True, blank=True)
     timetable = models.ForeignKey(TimeTable, null=True, on_delete=models.DO_NOTHING)
-    late_come = models.DurationField(blank=True, null=True)
-    early_leave = models.DurationField(blank=True, null=True)
+    late_come = models.DurationField('지각', blank=True, null=True)
+    early_leave = models.DurationField('조퇴', blank=True, null=True)
     absence = models.BooleanField('부재', default=False)
     reason = models.CharField('사유', choices=Absence_choices, max_length=2, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
