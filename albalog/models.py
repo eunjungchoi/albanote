@@ -35,12 +35,24 @@ class Member(models.Model):
         ('active', '재직중'),
         ('inactive', '퇴사'),
     ]
+    Days = (
+        ('0', '월'),
+        ('1', '화'),
+        ('2', '수'),
+        ('3', '목'),
+        ('4', '금'),
+        ('5', '토'),
+        ('6', '일')
+    )
     type = models.CharField(choices=Types, max_length=10, default='member')
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     hourly_wage = models.IntegerField(blank=True)
     status = models.CharField(choices=Statuses, max_length=10, default='active')
     resignation_date = models.DateField(null=True, blank=True)
+    annual_leave = models.IntegerField('연차', blank=True, default=0)
+    weekly_holiday = models.CharField('주휴일', choices=Days, max_length=1,  blank=True, default=6)
+    start_date = models.DateField('입사일', blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
