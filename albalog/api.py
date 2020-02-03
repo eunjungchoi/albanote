@@ -7,7 +7,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 
-from albalog.models import User, Business, Member, Work, TimeTable
+from albalog.models import User, Business, Member, TimeTable, Attendance
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -64,9 +64,9 @@ class MemberSerialzer(serializers.ModelSerializer):
         fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'latest_work_date', 'created')
 
     def latest_work(self, obj):
-        work = Work.objects.filter(member=obj).last()
+        work = Attendance.objects.filter(member=obj, absence=False).last()
         if work:
-            return work.start_time
+            return Attendance.start_time
         else:
             return None
 
@@ -156,17 +156,17 @@ class TimeTableViewSet(viewsets.ModelViewSet):
         return JsonResponse({'result': 'success'})
 
 
-class WorkSerializer(serializers.ModelSerializer):
+class AttendanceSerializer(serializers.ModelSerializer):
     member = MemberSerialzer()
 
     class Meta:
-        model = Work
-        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'early_leave')
+        model = Attendance
+        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'early_leave', 'absence', 'reason')
 
 
-class WorkViewSet(viewsets.ModelViewSet):
-    queryset = Work.objects
-    serializer_class = WorkSerializer
+class AttendanceViewSet(viewsets.ModelViewSet):
+    queryset = Attendance.objects
+    serializer_class = AttendanceSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -190,12 +190,12 @@ class WorkViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         business_id = request.data['business_id']
         member = Member.objects.get(user=request.user, business__id=business_id)
-        work = Work.objects.create(
+        attendance = Attendance.objects.create(
             member=member,
             start_time=request.data['start_time'],
             end_time=request.data['end_time'],
         )
-        return JsonResponse(WorkSerializer(work).data)
+        return JsonResponse(AttendanceSerializer(attendance).data)
 
     @action(['get'], detail=False)
     def get_monthly_salary(self, request):

@@ -23,7 +23,7 @@ router = routers.DefaultRouter()
 router.register('users', api.UserViewSet)
 router.register('businesses', api.BusinessViewSet)
 router.register('members', api.MemberViewSet)
-router.register('works', api.WorkViewSet)
+router.register('attendances', api.AttendanceViewSet)
 router.register('timetables', api.TimeTableViewSet)
 
 urlpatterns = [

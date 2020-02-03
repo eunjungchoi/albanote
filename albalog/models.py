@@ -64,7 +64,7 @@ class TimeTable(models.Model):
     end_time = models.TimeField()
 
 
-class Work(models.Model):
+class Attendance(models.Model):
     Absence_choices = [
         (0, '법정휴일'),
         (1, '약정휴일'),
@@ -85,7 +85,7 @@ class Work(models.Model):
     updated = models.DateTimeField(auto_now=True)
 
 
-@receiver(pre_save, sender=Work)
+@receiver(pre_save, sender=Attendance)
 def calculate_duration_and_late_come(sender, instance, **kwargs):
     work_start = datetime.strptime(instance.start_time, '%Y-%m-%dT%H:%M')
     work_end = datetime.strptime(instance.end_time, '%Y-%m-%dT%H:%M')
