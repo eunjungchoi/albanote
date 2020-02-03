@@ -64,6 +64,20 @@ class TimeTable(models.Model):
     end_time = models.TimeField()
 
 
+class HolidayPolicy(models.Model):
+    Choices = [
+        (0, '공휴일'),
+        (1, '창립기념일'),
+        (2, '병가'),
+        (3, '경조사'),
+        (4, '기타')
+    ]
+    business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
+    type = models.CharField('종류', choices=Choices, max_length=10, blank=True)
+    paid = models.BooleanField('유급 여부', default=False)
+    memo = models.TextField('비고', max_length=50, blank=True)
+
+
 class Attendance(models.Model):
     Absence_choices = [
         (0, '법정휴일'),
