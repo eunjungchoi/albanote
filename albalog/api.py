@@ -66,7 +66,7 @@ class MemberSerialzer(serializers.ModelSerializer):
     def latest_work(self, obj):
         work = Attendance.objects.filter(member=obj, absence=False).last()
         if work:
-            return Attendance.start_time
+            return work.start_time
         else:
             return None
 
@@ -139,7 +139,7 @@ class TimeTableViewSet(viewsets.ModelViewSet):
         business_id = request.data['business_id']
         me = Member.objects.get(user=request.user, business__id=business_id)
         if me.type != 'manager':
-            return JsonResponse({ 'error': '직원 추가는 관리자만 가능합니다'})
+            return JsonResponse({ 'error': '근무일정 추가는 관리자만 가능합니다'})
         if request.data['member']:
             member = Member.objects.filter(business_id=business_id).get(id=request.data['member'])
         else:
