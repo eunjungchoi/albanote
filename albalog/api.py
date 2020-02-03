@@ -27,7 +27,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return JsonResponse(UserSerializer(request.user).data)
 
 
-class BusinessSerialzer(serializers.ModelSerializer):
+class BusinessSerializer(serializers.ModelSerializer):
     class Meta:
         model = Business
         fields = ('id', 'license_name', 'license_number', 'address')
@@ -35,7 +35,7 @@ class BusinessSerialzer(serializers.ModelSerializer):
 
 class BusinessViewSet(viewsets.ModelViewSet):
     queryset = Business.objects.all()
-    serializer_class = BusinessSerialzer
+    serializer_class = BusinessSerializer
 
     def create(self, request, *args, **kwargs):
         business = Business.objects.create(
@@ -49,13 +49,13 @@ class BusinessViewSet(viewsets.ModelViewSet):
             type='manager'
         )
         return JsonResponse({
-            'business': BusinessSerialzer(business).data,
+            'business': BusinessSerializer(business).data,
             'member': MemberSerialzer(member).data
         })
 
 
 class MemberSerialzer(serializers.ModelSerializer):
-    business = BusinessSerialzer()
+    business = BusinessSerializer()
     user = UserSerializer()
     latest_work_date = serializers.SerializerMethodField('latest_work')
 
