@@ -65,13 +65,22 @@ class TimeTable(models.Model):
 
 
 class Work(models.Model):
+    Absence_choices = [
+        (0, '법정휴일'),
+        (1, '약정휴일'),
+        (2, '연차'),
+        (3, '무단결근'),
+    ]
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     duration = models.DurationField(blank=True, null=True)
+    date = models.DateField('날짜', null=True, blank=True)
     timetable = models.ForeignKey(TimeTable, null=True, on_delete=models.DO_NOTHING)
     late_come = models.DurationField(blank=True, null=True)
     early_leave = models.DurationField(blank=True, null=True)
+    absence = models.BooleanField('부재', default=False)
+    reason = models.CharField('사유', choices=Absence_choices, max_length=2, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
