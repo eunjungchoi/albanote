@@ -107,6 +107,7 @@ class Attendance(models.Model):
     early_leave = models.DurationField('조퇴', blank=True, null=True)
     absence = models.BooleanField('부재', default=False)
     reason = models.CharField('사유', choices=Absence_choices, max_length=2, null=True, blank=True)
+    reason_detail = models.ForeignKey(HolidayPolicy, null=True, blank=True, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
