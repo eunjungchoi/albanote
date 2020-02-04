@@ -89,9 +89,9 @@ class HolidayPolicy(models.Model):
         (4, '기타')
     ]
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
-    type = models.CharField('종류', choices=Choices, max_length=10, blank=True)
+    type = models.CharField('종류', choices=Choices, max_length=10)
     paid = models.BooleanField('유급 여부', default=False)
-    memo = models.TextField('비고', max_length=50, blank=True)
+    memo = models.TextField('비고', max_length=50, null=True, blank=True)
 
 
 class Attendance(models.Model):
