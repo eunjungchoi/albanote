@@ -53,6 +53,10 @@ class Member(models.Model):
     weekly_holiday = models.CharField('주휴일', choices=Days, max_length=1,  blank=True, default=6)
     start_date = models.DateField('입사일', blank=True)
     resignation_date = models.DateField('퇴사일', null=True, blank=True)
+    national_pension = models.BooleanField(default=False)
+    health_insurance = models.BooleanField(default=False)
+    employment_insurance = models.BooleanField(default=False)
+    industrial_accident_comp_insurance = models.BooleanField(default=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
