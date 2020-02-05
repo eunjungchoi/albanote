@@ -98,11 +98,18 @@ class MemberViewSet(viewsets.ModelViewSet):
             return JsonResponse({ 'error': '직원 추가는 관리자만 가능합니다'})
 
         type = 'member'  # 관리자 1명을 제외한 모든 근로자는 일반 직원으로 분류
+        insurances = request.data['insurance']
         member, created = Member.objects.get_or_create(
             user=new_user,
             business=business,
             type=type,
-            hourly_wage=request.data['hourly_wage']
+            hourly_wage=request.data['hourly_wage'],
+            start_date=request.data['start_date'],
+            weekly_holiday=request.data['weekly_holiday'],
+            national_pension='0' in insurances,
+            health_insurance='1' in insurances,
+            employment_insurance='2' in insurances,
+            industrial_accident_comp_insurance='3' in insurances
         )
         return JsonResponse(MemberSerialzer(member).data)
 
