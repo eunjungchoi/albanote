@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime, timedelta
+from datetime import datetime, date, timedelta
 
 from django.db.models import Sum
 from django.http import JsonResponse
@@ -287,9 +287,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
     def calculate_monthly_salary(self, queryset, member, year, month, last_day_of_month, save):
         queryset = queryset.filter(member=member)
-        # 기본급 계산
         total_working_days, total_hours, base_salary, late_come_count = self.calculate_base_salary(queryset, member, year, month)
-        # 2) 주휴수당 계산:
+
+        from datetime import date
+        today = date.today()
         주휴수당 = []
         weekly_hours = {}
 
@@ -304,11 +305,9 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             weekly_total_hours = self.weekly_total_hours(queryset, start, end)
             weekly_hours[start.strftime('%Y-%m-%d')] = weekly_total_hours
 
-            if last_day_of_month <= end:
-                break
-
-            if member.resignation_date and member.resignation_date <= end:
-                break
+            if last_day_of_month <= end:break
+            if today <= end:break
+            if member.resignation_date and member.resignation_date <= end:break
 
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member):
                 pay = self.calculate_weekly_holiday_pay(weekly_total_hours, member)
@@ -321,7 +320,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         net_pay = gross_pay - sum_of_deductions
 
         if save:
-            payroll, created = PayRoll.objects.get_or_create(
+            PayRoll.objects.get_or_create(
                 member=member,
                 year=year,
                 month=month,
