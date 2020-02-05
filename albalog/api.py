@@ -61,7 +61,7 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'latest_work_date', 'created')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'latest_work_date', 'created', 'annual_leave', 'start_date')
 
     def latest_work(self, obj):
         work = Attendance.objects.filter(member=obj, absence=False).last()
@@ -199,7 +199,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attendance
-        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'early_leave', 'absence', 'reason')
+        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'date', 'early_leave', 'absence', 'reason')
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
