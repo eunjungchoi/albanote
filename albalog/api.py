@@ -285,8 +285,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     def calcualate_monthly_salary(self, queryset, member, year, month, last_day_of_month):
         queryset = queryset.filter(member=member)
         # 기본급 계산
-        total_hours, base_salary = self.calcuate_base_salary(queryset, member, year, month)
-
+        total_working_days, total_hours, base_salary, late_come_count = self.calculate_base_salary(queryset, member, year, month)
         # 2) 주휴수당 계산:
         주휴수당 = []
         weekly_hours = {}
@@ -318,6 +317,8 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         return {
             'id': member.id,
             'total_hours': total_hours,
+            'working_days': total_working_days,
+            'late_come_count': late_come_count,
             'weekly_hours': weekly_hours,
             'total_monthly_pay': total_monthly_pay,
             'base_salary': base_salary,
@@ -325,13 +326,14 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             'extra_pay_list': 주휴수당
         }
 
-    def calcuate_base_salary(self, queryset, member, year, month):
-        queryset = queryset.filter(start_time__year=year, start_time__month=month)
-        total_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
+    def calculate_base_salary(self, queryset, member, year, month):
+        total_working_days = queryset.filter(start_time__year=year, start_time__month=month, absence=False).count()
+        late_come_count = queryset.filter(start_time__year=year, start_time__month=month, absence=False, late_come__isnull=False).count()
+        total_work_duration = queryset.filter(start_time__year=year, start_time__month=month).aggregate(Sum('duration'))['duration__sum']
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
-            return total_hours, total_hours * member.hourly_wage
-        return 0, 0
+            return total_working_days, total_hours, total_hours * member.hourly_wage, late_come_count
+        return 0, 0, 0, 0
 
     def weekly_total_hours(self, queryset, start, end):
         queryset = queryset.filter(start_time__gte=start, end_time__lte=end)
