@@ -7,7 +7,7 @@ from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 
-from albalog.models import User, Business, Member, TimeTable, Attendance
+from albalog.models import User, Business, Member, TimeTable, Attendance, HolidayPolicy, PayRoll
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -161,6 +161,37 @@ class TimeTableViewSet(viewsets.ModelViewSet):
                 end_time=request.data['end_time'],
             )
         return JsonResponse({'result': 'success'})
+
+
+class HolidayPolicySerializer(serializers.ModelSerializer):
+    business = BusinessSerializer()
+
+    class Meta:
+        model = HolidayPolicy
+        fields = ('id', 'business', 'type', 'paid', 'memo')
+
+
+class HolidayPolicyViewSet(viewsets.ModelViewSet):
+    queryset = HolidayPolicy.objects.all()
+    serializer_class = HolidayPolicySerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if 'business' in self.request.query_params:
+            business = Business.objects.get(id=self.request.query_params['business'])
+            queryset = queryset.filter(business__id=business.id)
+
+        return queryset
+
+    def create(self, request, *args, **kwargs):
+        business = Business.objects.get(id=request.data['business_id'])
+        holiday = HolidayPolicy.objects.create(
+            business=business,
+            type=request.data['type'],
+            paid=request.data['paid'],
+            memo=request.data['memo']
+        )
+        return JsonResponse(HolidayPolicySerializer(holiday).data)
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
