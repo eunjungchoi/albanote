@@ -270,8 +270,12 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             members = [me]
 
         all_members_salary = []
+        save_payroll = False
+        if 'save' in request.query_params:
+            save_payroll = True
+
         for member in members:
-            member_salary = self.calcualate_monthly_salary(queryset, member, year, month, last_day_of_month)
+            member_salary = self.calculate_monthly_salary(queryset, member, year, month, last_day_of_month, save_payroll)
             all_members_salary.append(member_salary)
 
         salary_data = {
@@ -281,8 +285,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         }
         return JsonResponse(salary_data)
 
-
-    def calcualate_monthly_salary(self, queryset, member, year, month, last_day_of_month):
+    def calculate_monthly_salary(self, queryset, member, year, month, last_day_of_month, save):
         queryset = queryset.filter(member=member)
         # 기본급 계산
         total_working_days, total_hours, base_salary, late_come_count = self.calculate_base_salary(queryset, member, year, month)
@@ -308,36 +311,53 @@ class AttendanceViewSet(viewsets.ModelViewSet):
                 break
 
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member):
-                pay = self.calculate_extra_pay(weekly_total_hours, member)
+                pay = self.calculate_weekly_holiday_pay(weekly_total_hours, member)
 
             주휴수당.append(pay)
 
-        total_extra_pay = sum(주휴수당)
-        total_monthly_pay = base_salary + total_extra_pay
+        sum_of_weekly_holiday_pay = sum(주휴수당)
+        gross_pay = base_salary + sum_of_weekly_holiday_pay
+        sum_of_deductions = 0
+        net_pay = gross_pay - sum_of_deductions
+
+        if save:
+            payroll, created = PayRoll.objects.get_or_create(
+                member=member,
+                year=year,
+                month=month,
+                working_hours=total_hours,
+                working_days=total_working_days,
+                base_salary=base_salary,
+                weekly_holiday_allowance=sum_of_weekly_holiday_pay,
+                gross_pay=gross_pay,
+                sum_of_deductions=sum_of_deductions,
+                net_pay=net_pay
+            )
         return {
             'id': member.id,
             'total_hours': total_hours,
             'working_days': total_working_days,
             'late_come_count': late_come_count,
             'weekly_hours': weekly_hours,
-            'total_monthly_pay': total_monthly_pay,
+            'total_monthly_pay': net_pay,
             'base_salary': base_salary,
-            'total_extra_pay': total_extra_pay,
+            'total_extra_pay': sum_of_weekly_holiday_pay,
             'extra_pay_list': 주휴수당
         }
 
     def calculate_base_salary(self, queryset, member, year, month):
         total_working_days = queryset.filter(start_time__year=year, start_time__month=month, absence=False).count()
         late_come_count = queryset.filter(start_time__year=year, start_time__month=month, absence=False, late_come__isnull=False).count()
-        total_work_duration = queryset.filter(start_time__year=year, start_time__month=month).aggregate(Sum('duration'))['duration__sum']
+        total_work_duration = queryset.filter(absence=False, start_time__year=year, start_time__month=month).aggregate(Sum('duration'))['duration__sum']
+        if total_work_duration:
+            actual_work_hours = total_work_duration.total_seconds() // 3600
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
-            return total_working_days, total_hours, total_hours * member.hourly_wage, late_come_count
+            return total_working_days, actual_work_hours, total_hours * member.hourly_wage, late_come_count
         return 0, 0, 0, 0
 
     def weekly_total_hours(self, queryset, start, end):
-        queryset = queryset.filter(start_time__gte=start, end_time__lte=end)
-        weekly_work_duration = queryset.aggregate(Sum('duration'))['duration__sum']
+        weekly_work_duration = queryset.filter(absence=False, start_time__gte=start, end_time__lte=end).aggregate(Sum('duration'))['duration__sum']
         if weekly_work_duration:
             return weekly_work_duration.total_seconds() // 3600
         return 0
@@ -353,7 +373,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         absent_count = timetables.count() - queryset.count()
         return False
 
-    def calculate_extra_pay(self, weekly_total_hours, member):  # 주휴수당 계산
+    def calculate_weekly_holiday_pay(self, weekly_total_hours, member):
         if weekly_total_hours >= 40:
             return 8 * member.hourly_wage
 
