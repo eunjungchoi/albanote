@@ -117,7 +117,18 @@ class Attendance(models.Model):
 
 
 @receiver(pre_save, sender=Attendance)
-def calculate_duration_and_late_come(sender, instance, **kwargs):
+def calculate_duration_and_detect_timetable(sender, instance, **kwargs):
+    from datetime import date
+    if instance.absence:
+        date = datetime.strptime(instance.date, '%Y-%m-%d')
+        timetable = TimeTable.objects.get(member=instance.member, day=date.weekday())
+        instance.timetable = timetable
+
+        if instance.reason == 2:
+            instance.member.annual_leave -= 1
+            instance.member.save()
+        return
+
     work_start = datetime.strptime(instance.start_time, '%Y-%m-%dT%H:%M')
     work_end = datetime.strptime(instance.end_time, '%Y-%m-%dT%H:%M')
     instance.duration = work_end - work_start
@@ -133,8 +144,7 @@ def calculate_duration_and_late_come(sender, instance, **kwargs):
         diff2 = datetime.combine(date.today(), work_end.time()) - datetime.combine(date.today(), timetable.start_time)
         diff2_minutes = diff2.total_seconds() / 60
 
-        if diff1_minutes and diff2_minutes:
-            # 출근
+        if diff1_minutes > 0 and diff2_minutes > 0:
             instance.timetable = timetable
 
             # 지각: 근무내역 시작시간이 시간표 시작시간 보다 크면 (=늦으면)
