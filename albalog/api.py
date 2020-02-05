@@ -348,8 +348,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         total_working_days = queryset.filter(start_time__year=year, start_time__month=month, absence=False).count()
         late_come_count = queryset.filter(start_time__year=year, start_time__month=month, absence=False, late_come__isnull=False).count()
         total_work_duration = queryset.filter(absence=False, start_time__year=year, start_time__month=month).aggregate(Sum('duration'))['duration__sum']
-        if total_work_duration:
-            actual_work_hours = total_work_duration.total_seconds() // 3600
+        actual_work_hours = total_work_duration.total_seconds() // 3600 if total_work_duration else 0
 
         # 법정휴일이나 연차 사용일은 유급휴일로서, 근로한 것으로 인정해서 총 근로시간에 포함시켜줌
         queryset = queryset.filter(absence=True, reason__in=[0, 2], date__year=year, date__month=month)
@@ -358,13 +357,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             for q in queryset:
                 from datetime import date
                 original_duration = datetime.combine(date.today(), q.timetable.end_time) - datetime.combine(date.today(), q.timetable.start_time)
-                if paid_leave_sum:
-                    paid_leave_sum += original_duration
-                else:
-                    paid_leave_sum = original_duration
+                paid_leave_sum = paid_leave_sum + original_duration if paid_leave_sum else original_duration
 
         if paid_leave_sum:
-            total_work_duration += paid_leave_sum
+            total_work_duration = total_work_duration + paid_leave_sum if total_work_duration else paid_leave_sum
 
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
@@ -382,13 +378,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             for q in queryset:
                 from datetime import date
                 original_duration = datetime.combine(date.today(), q.timetable.end_time) - datetime.combine(date.today(), q.timetable.start_time)
-                if annual_leave_sum:
-                    annual_leave_sum += original_duration
-                else:
-                    annual_leave_sum = original_duration
+                annual_leave_sum = annual_leave_sum + original_duration if annual_leave_sum else original_duration
 
             if annual_leave_sum:
-                weekly_work_duration += annual_leave_sum
+                weekly_work_duration = weekly_work_duration + annual_leave_sum if weekly_work_duration else annual_leave_sum
 
         if weekly_work_duration:
             return weekly_work_duration.total_seconds() // 3600
@@ -406,7 +399,6 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             return True
 
         paid_leave = queryset.filter(absence=True, reason__in=[0, 2], date__gte=start, date__lte=end)
-        print(paid_leave.count())
 
         if paid_leave.count() == timetable_count:  # 한 주가 모두 연차로 구성되면 주휴수당 수령 불가
             return False
