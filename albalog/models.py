@@ -74,10 +74,13 @@ class TimeTable(models.Model):
         ('5', '토'),
         ('6', '일')
     )
-    member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
     day = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
     start_time = models.TimeField()
     end_time = models.TimeField()
+
+    def __str__(self):
+        return self.member.business.license_name + '_' + self.day + '_' + self.member.user.name
 
 
 class HolidayPolicy(models.Model):
