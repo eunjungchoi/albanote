@@ -351,6 +351,22 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         total_work_duration = queryset.filter(absence=False, start_time__year=year, start_time__month=month).aggregate(Sum('duration'))['duration__sum']
         if total_work_duration:
             actual_work_hours = total_work_duration.total_seconds() // 3600
+
+        # 법정휴일이나 연차 사용일은 유급휴일로서, 근로한 것으로 인정해서 총 근로시간에 포함시켜줌
+        queryset = queryset.filter(absence=True, reason__in=[0, 2], date__year=year, date__month=month)
+        paid_leave_sum = None
+        if queryset.count():
+            for q in queryset:
+                from datetime import date
+                original_duration = datetime.combine(date.today(), q.timetable.end_time) - datetime.combine(date.today(), q.timetable.start_time)
+                if paid_leave_sum:
+                    paid_leave_sum += original_duration
+                else:
+                    paid_leave_sum = original_duration
+
+        if paid_leave_sum:
+            total_work_duration += paid_leave_sum
+
         if total_work_duration:
             total_hours = total_work_duration.total_seconds() // 3600
             return total_working_days, actual_work_hours, total_hours * member.hourly_wage, late_come_count
@@ -358,19 +374,46 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
     def weekly_total_hours(self, queryset, start, end):
         weekly_work_duration = queryset.filter(absence=False, start_time__gte=start, end_time__lte=end).aggregate(Sum('duration'))['duration__sum']
+
+        # 유급휴일을 주 근로시간에 포함시켜 계산
+        queryset = queryset.filter(absence=True, reason=2, date__gte=start, date__lte=end)
+        if queryset.count():
+            annual_leave_sum = None
+
+            for q in queryset:
+                from datetime import date
+                original_duration = datetime.combine(date.today(), q.timetable.end_time) - datetime.combine(date.today(), q.timetable.start_time)
+                if annual_leave_sum:
+                    annual_leave_sum += original_duration
+                else:
+                    annual_leave_sum = original_duration
+
+            if annual_leave_sum:
+                weekly_work_duration += annual_leave_sum
+
         if weekly_work_duration:
             return weekly_work_duration.total_seconds() // 3600
         return 0
 
     def attend_all(self, queryset, start, end, member):
-        queryset = queryset.filter(start_time__gte=start, end_time__lte=end).order_by('start_time')
-        timetables = TimeTable.objects.filter(member=member).order_by('day')
+        work = queryset.filter(absence=False, start_time__gte=start, end_time__lte=end).exclude(timetable__isnull=True)
+        timetables = TimeTable.objects.filter(member=member)
+        work_count = work.count()
+        timetable_count = timetables.count()
+        if not work_count:   # 실제 근로한 날이 0일이면 주휴수당 수령 불가
+            return False
 
-        queryset = queryset.exclude(timetable=None)
-        if queryset.count() == timetables.count():
+        if work_count == timetable_count:
             return True
 
-        absent_count = timetables.count() - queryset.count()
+        paid_leave = queryset.filter(absence=True, reason__in=[0, 2], date__gte=start, date__lte=end)
+        print(paid_leave.count())
+
+        if paid_leave.count() == timetable_count:  # 한 주가 모두 연차로 구성되면 주휴수당 수령 불가
+            return False
+        if work_count + paid_leave.count() == timetable_count:
+            return True
+
         return False
 
     def calculate_weekly_holiday_pay(self, weekly_total_hours, member):
