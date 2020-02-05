@@ -228,11 +228,24 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         business_id = request.data['business_id']
         member = Member.objects.get(user=request.user, business__id=business_id)
-        attendance = Attendance.objects.create(
-            member=member,
-            start_time=request.data['start_time'],
-            end_time=request.data['end_time'],
-        )
+        if 'absence' in request.data and int(request.data['absence']) == 1:
+            if request.data['reason'] == 2 and member.annual_leave == 0:
+                return JsonResponse({'error': '남은 연차가 없습니다'})
+
+            attendance = Attendance.objects.create(
+                member=member,
+                absence=True,
+                date=request.data['date'],
+                reason=request.data['reason'],
+            )
+        else:
+            attendance = Attendance.objects.create(
+                member=member,
+                start_time=request.data['start_time'],
+                end_time=request.data['end_time'],
+                date=request.data['start_time'][0:10],
+                absence=False,
+            )
         return JsonResponse(AttendanceSerializer(attendance).data)
 
     @action(['get'], detail=False)
