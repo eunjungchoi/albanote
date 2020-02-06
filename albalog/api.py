@@ -309,7 +309,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
 
         from datetime import date
         today = date.today()
-        주휴수당 = []
+        주휴수당 = {}
         weekly_hours = {}
 
         key_dates = [1, 8, 15, 22, 29]
@@ -330,9 +330,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             if weekly_total_hours >= 15 and self.attend_all(queryset, start, end, member):
                 pay = self.calculate_weekly_holiday_pay(weekly_total_hours, member)
 
-            주휴수당.append(pay)
+            start_str = start.strftime("%m/%d")
+            주휴수당[start_str] = pay
 
-        sum_of_weekly_holiday_pay = sum(주휴수당)
+        sum_of_weekly_holiday_pay = sum(주휴수당.values())
         gross_pay = base_salary + sum_of_weekly_holiday_pay
         sum_of_deductions = 0
         net_pay = gross_pay - sum_of_deductions
