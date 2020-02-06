@@ -61,7 +61,7 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'status', 'latest_work_date', 'created', 'annual_leave', 'start_date')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'weekly_holiday', 'status', 'latest_work_date', 'created', 'annual_leave', 'start_date')
 
     def latest_work(self, obj):
         work = Attendance.objects.filter(member=obj, absence=False).last()
@@ -113,6 +113,24 @@ class MemberViewSet(viewsets.ModelViewSet):
         )
         return JsonResponse(MemberSerialzer(member).data)
 
+    def update(self, request, pk, *args, **kwargs):
+        business = Business.objects.get(id=request.data['business_id'])
+        me = Member.objects.get(user=request.user, business=business)
+        if me.type != 'manager':
+            return JsonResponse({'error': '직원 정보 변경은 관리자만 가능합니다'})
+
+        member = Member.objects.get(id=pk)
+        insurances = request.data['insurance']
+
+        member.hourly_wage = int(request.data['hourly_wage'])
+        member.start_date = request.data['start_date']
+        member.weekly_holiday = request.data['weekly_holiday']
+        member.national_pension = '0' in insurances
+        member.health_insurance = '1' in insurances
+        member.employment_insurance = '2' in insurances
+        member.industrial_accident_comp_insurance = '3' in insurances
+        member.save()
+        return JsonResponse(MemberSerialzer(member).data)
 
 class TimeTableSerializer(serializers.ModelSerializer):
     member = MemberSerialzer()
