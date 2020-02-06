@@ -190,3 +190,8 @@ class PayRoll(models.Model):
     net_pay = models.IntegerField('차인지급액')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['member', 'year', 'month'], name='unique_year_month_member')
+        ]
