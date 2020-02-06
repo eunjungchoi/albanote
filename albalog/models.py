@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -117,6 +117,12 @@ class Attendance(models.Model):
     reason_detail = models.ForeignKey(HolidayPolicy, null=True, blank=True, on_delete=models.DO_NOTHING)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=models.Q(duration__gt=timedelta(0)), name='duration_gt_0'),
+            models.UniqueConstraint(fields=['date', 'timetable'], name='unique_date_timetable')
+        ]
 
 
 @receiver(pre_save, sender=Attendance)
