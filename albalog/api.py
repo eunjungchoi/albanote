@@ -61,12 +61,12 @@ class MemberSerialzer(serializers.ModelSerializer):
 
     class Meta:
         model = Member
-        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'weekly_holiday', 'status', 'latest_work_date', 'created', 'annual_leave', 'start_date')
+        fields = ('id', 'business', 'user', 'type', 'hourly_wage', 'weekly_holiday', 'status', 'latest_work_date', 'created', 'annual_leave', 'start_date', 'resignation_date')
 
     def latest_work(self, obj):
-        work = Attendance.objects.filter(member=obj, absence=False).last()
-        if work:
-            return work.start_time
+        work = Attendance.objects.filter(member=obj, absence=False).order_by('-date')
+        if work.count():
+            return work[0].date
         else:
             return None
 
