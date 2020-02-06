@@ -240,7 +240,7 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         if 'year' in self.request.query_params and 'month' in self.request.query_params:
             queryset = queryset.filter(start_time__year=self.request.query_params['year'], start_time__month=self.request.query_params['month'])
 
-        queryset = queryset.order_by('-start_time')
+        queryset = queryset.order_by('-date', '-start_time')
         return queryset
 
     def create(self, request, *args, **kwargs):
