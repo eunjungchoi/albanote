@@ -109,7 +109,7 @@ class Attendance(models.Model):
     end_time = models.DateTimeField('퇴근일시', null=True, blank=True)
     duration = models.DurationField('근무시간', blank=True, null=True)
     date = models.DateField('날짜', null=True, blank=True)
-    timetable = models.ForeignKey(TimeTable, null=True, on_delete=models.DO_NOTHING)
+    timetable = models.ForeignKey(TimeTable, null=True, blank=True, on_delete=models.DO_NOTHING)
     late_come = models.DurationField('지각', blank=True, null=True)
     early_leave = models.DurationField('조퇴', blank=True, null=True)
     absence = models.BooleanField('부재', default=False)
