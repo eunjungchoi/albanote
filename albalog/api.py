@@ -217,7 +217,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attendance
-        fields = ('member', 'start_time', 'end_time', 'duration', 'late_come', 'date', 'early_leave', 'absence', 'reason')
+        fields = ('id', 'member', 'start_time', 'end_time', 'duration', 'late_come', 'date', 'early_leave', 'absence', 'reason')
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
