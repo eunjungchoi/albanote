@@ -38,15 +38,19 @@ class BusinessViewSet(viewsets.ModelViewSet):
     serializer_class = BusinessSerializer
 
     def create(self, request, *args, **kwargs):
+        license_number = request.data['license_number'].replace('-', '')
+
         business = Business.objects.create(
             license_name=request.data['license_name'],
-            license_number=request.data['license_number'],
+            license_number=license_number,
             address=request.data['address']
         )
         member = Member.objects.create(
             business=business,
             user=request.user,
-            type='manager'
+            type='manager',
+            hourly_wage=0,
+            start_date=date.today(),
         )
         return JsonResponse({
             'business': BusinessSerializer(business).data,
