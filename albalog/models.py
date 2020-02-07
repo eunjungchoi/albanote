@@ -97,6 +97,11 @@ class TimeTable(models.Model):
     end_time = models.TimeField()
     end_next_day = models.BooleanField(default=False)
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(check=models.Q(end_next_day=False, end_time__gt=F('start_time')) | models.Q(end_next_day=True), name='end_time_is_greater_than_start_time_if_end_on_same_day'),
+        ]
+
     def __str__(self):
         return self.member.business.license_name + '_' + self.day + '_' + self.member.user.name
 
