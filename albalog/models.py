@@ -5,7 +5,7 @@ from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, Ra
 from django.db import models
 
 # Create your models here.
-from django.db.models import Func, Q
+from django.db.models import Func, Q, F
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
@@ -129,6 +129,7 @@ class Attendance(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(check=models.Q(duration__gt=timedelta(0)), name='duration_gt_0'),
+            models.CheckConstraint(check=models.Q(end_time__gt=F('start_time')), name='end_time_is_greater_than_start_time'),
             models.UniqueConstraint(fields=['date', 'timetable'], name='unique_date_timetable'),
             ExclusionConstraint(
                 name='exclude_overlapping_attendance',
