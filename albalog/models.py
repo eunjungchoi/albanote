@@ -130,6 +130,7 @@ class Attendance(models.Model):
         constraints = [
             models.CheckConstraint(check=models.Q(duration__gt=timedelta(0)), name='duration_gt_0'),
             models.CheckConstraint(check=models.Q(end_time__gt=F('start_time')), name='end_time_is_greater_than_start_time'),
+            models.CheckConstraint(check=models.Q(absence=True, timetable__isnull=False) | models.Q(absence=False), name='exclude_absence_on_day_off'),
             models.UniqueConstraint(fields=['date', 'timetable'], name='unique_date_timetable'),
             ExclusionConstraint(
                 name='exclude_overlapping_attendance',
@@ -147,8 +148,11 @@ def calculate_duration_and_detect_timetable(sender, instance, **kwargs):
     from datetime import date
     if instance.absence:
         date = datetime.strptime(instance.date, '%Y-%m-%d')
-        timetable = TimeTable.objects.get(member=instance.member, day=date.weekday())
-        instance.timetable = timetable
+        try:
+            timetable = TimeTable.objects.filter(member=instance.member, day=date.weekday())[0]
+            instance.timetable = timetable
+        except IndexError:
+            raise Exception
 
         if instance.reason == 2:
             instance.member.annual_leave -= 1
