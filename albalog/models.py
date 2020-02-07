@@ -1,8 +1,11 @@
 from datetime import datetime, date, timedelta
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, RangeOperators
 from django.db import models
 
 # Create your models here.
+from django.db.models import Func, Q
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
@@ -97,6 +100,11 @@ class HolidayPolicy(models.Model):
     memo = models.TextField('비고', max_length=50, null=True, blank=True)
 
 
+class TsTzRange(Func):
+    function = 'TSTZRANGE'
+    output_field = DateTimeRangeField()
+
+
 class Attendance(models.Model):
     Absence_choices = [
         (0, '법정휴일'),
@@ -121,7 +129,15 @@ class Attendance(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(check=models.Q(duration__gt=timedelta(0)), name='duration_gt_0'),
-            models.UniqueConstraint(fields=['date', 'timetable'], name='unique_date_timetable')
+            models.UniqueConstraint(fields=['date', 'timetable'], name='unique_date_timetable'),
+            ExclusionConstraint(
+                name='exclude_overlapping_attendance',
+                expressions=(
+                    (TsTzRange('start_time', 'end_time', RangeBoundary()), RangeOperators.OVERLAPS),
+                    ('member', RangeOperators.EQUAL),
+                ),
+                condition=Q(start_time__isnull=False, end_time__isnull=False)
+            )
         ]
 
 
