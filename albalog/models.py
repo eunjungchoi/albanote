@@ -74,7 +74,8 @@ class Member(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['business', 'user'], name='unique_business_user')
+            models.UniqueConstraint(fields=['business', 'user'], name='unique_business_user'),
+            models.CheckConstraint(check=models.Q(hourly_wage__gt=0), name='hourly_wage_is_over_0'),
         ]
 
     def __str__(self):
