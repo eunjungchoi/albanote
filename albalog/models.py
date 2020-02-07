@@ -63,6 +63,11 @@ class Member(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['business', 'user'], name='unique_business_user')
+        ]
+
     def __str__(self):
         return self.business.license_name + '_' + self.user.name
 
