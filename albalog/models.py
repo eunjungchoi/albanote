@@ -95,6 +95,7 @@ class TimeTable(models.Model):
     day = models.CharField(choices=DAYS_OF_WEEK, max_length=10)
     start_time = models.TimeField()
     end_time = models.TimeField()
+    end_next_day = models.BooleanField(default=False)
 
     def __str__(self):
         return self.member.business.license_name + '_' + self.day + '_' + self.member.user.name
