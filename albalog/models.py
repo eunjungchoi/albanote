@@ -9,6 +9,10 @@ from django.db.models import Func, Q, F
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+class TsTzRange(Func):
+    function = 'TSTZRANGE'
+    output_field = DateTimeRangeField()
+
 
 class User(AbstractUser):
     Types = [
@@ -24,6 +28,11 @@ class Business(models.Model):
     license_name = models.CharField(max_length=100)
     license_number = models.CharField(max_length=20)
     address = models.CharField(max_length=200)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['license_number'], name='unique_license_number')
+        ]
 
     def __str__(self):
         return self.license_name
@@ -48,7 +57,7 @@ class Member(models.Model):
         ('6', '일')
     )
     type = models.CharField('권한', choices=Types, max_length=10, default='member')
-    business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
+    business = models.ForeignKey(Business, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     hourly_wage = models.IntegerField('시급', null=True, blank=True)
     status = models.CharField('상태', choices=Statuses, max_length=10, default='active')
@@ -103,11 +112,6 @@ class HolidayPolicy(models.Model):
     type = models.CharField('종류', choices=Choices, max_length=10)
     paid = models.BooleanField('유급 여부', default=False)
     memo = models.TextField('비고', max_length=50, null=True, blank=True)
-
-
-class TsTzRange(Func):
-    function = 'TSTZRANGE'
-    output_field = DateTimeRangeField()
 
 
 class Attendance(models.Model):
