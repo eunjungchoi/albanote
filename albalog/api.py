@@ -48,13 +48,17 @@ class BusinessViewSet(viewsets.ModelViewSet):
             license_number=license_number,
             defaults=data
         )
-        member = Member.objects.create(
-            business=business,
-            user=request.user,
-            type='manager',
-            hourly_wage=0,
-            start_date=date.today(),
-        )
+        if created:
+            member = Member.objects.create(
+                business=business,
+                user=request.user,
+                type='manager',
+                hourly_wage=0,
+                start_date=date.today(),
+            )
+        else:
+            member = Member.objects.get(business=business, user=request.user)
+
         return JsonResponse({
             'business': BusinessSerializer(business).data,
             'member': MemberSerialzer(member).data
