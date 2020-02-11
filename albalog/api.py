@@ -350,17 +350,20 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         net_pay = gross_pay - sum_of_deductions
 
         if save:
-            PayRoll.objects.get_or_create(
+            data = {
+                'working_hours': total_hours,
+                'working_days': total_working_days,
+                'base_salary': base_salary,
+                'weekly_holiday_allowance': sum_of_weekly_holiday_pay,
+                'gross_pay': gross_pay,
+                'sum_of_deductions': sum_of_deductions,
+                'net_pay': net_pay
+            }
+            PayRoll.objects.update_or_create(
                 member=member,
                 year=year,
                 month=month,
-                working_hours=total_hours,
-                working_days=total_working_days,
-                base_salary=base_salary,
-                weekly_holiday_allowance=sum_of_weekly_holiday_pay,
-                gross_pay=gross_pay,
-                sum_of_deductions=sum_of_deductions,
-                net_pay=net_pay
+                defaults=data
             )
         return {
             'id': member.id,
