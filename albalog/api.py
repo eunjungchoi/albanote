@@ -179,7 +179,25 @@ class TimeTableViewSet(viewsets.ModelViewSet):
             member = me
 
         days = request.data['day']
+        start_time = datetime.strptime(request.data['start_time'], '%H:%M')
+        end_time = datetime.strptime(request.data['end_time'], '%H:%M')
+
         for day in days:
+            timetables = TimeTable.objects.filter(member=member, day=day)
+            overlapped = False
+            for timetable in timetables:
+                diff1 = datetime.combine(date.today(), timetable.end_time) - datetime.combine(date.today(), start_time.time())
+                diff1_minutes = diff1.total_seconds() / 60
+
+                diff2 = datetime.combine(date.today(), end_time.time()) - datetime.combine(date.today(), timetable.start_time)
+                diff2_minutes = diff2.total_seconds() / 60
+
+                if diff1_minutes > 0 and diff2_minutes > 0:
+                    overlapped = True
+
+            if overlapped:
+                return JsonResponse({'error': '시간표가 겹칩니다'})
+
             TimeTable.objects.create(
                 member=member,
                 day=day,
