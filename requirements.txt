@@ -8,3 +8,5 @@ asgiref==3.2.3
 django-cors-headers
 postgres
 psycopg2-binary
+drf-yasg
+swagger_spec_validator
