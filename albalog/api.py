@@ -40,10 +40,13 @@ class BusinessViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         license_number = request.data['license_number'].replace('-', '')
 
-        business = Business.objects.create(
-            license_name=request.data['license_name'],
+        data = {
+            'license_name': request.data['license_name'],
+            'address': request.data['address']
+        }
+        business, created = Business.objects.update_or_create(
             license_number=license_number,
-            address=request.data['address']
+            defaults=data
         )
         member = Member.objects.create(
             business=business,
