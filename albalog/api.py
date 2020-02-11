@@ -258,20 +258,23 @@ class AttendanceViewSet(viewsets.ModelViewSet):
             if request.data['reason'] == 2 and member.annual_leave == 0:
                 return JsonResponse({'error': '남은 연차가 없습니다'})
 
-            attendance = Attendance.objects.create(
-                member=member,
-                absence=True,
-                date=request.data['date'],
-                reason=request.data['reason'],
-            )
+            data = {
+                'absence': True,
+                'reason': request.data['reason']
+            }
         else:
-            attendance = Attendance.objects.create(
-                member=member,
-                start_time=request.data['start_time'],
-                end_time=request.data['end_time'],
-                date=request.data['start_time'][0:10],
-                absence=False,
-            )
+            data = {
+                'start_time': request.data['start_time'],
+                'end_time': request.data['end_time'],
+                'absence': False,
+                'reason': None
+            }
+
+        attendance, created = Attendance.objects.update_or_create(
+            member=member,
+            date=request.data['start_time'][0:10],
+            defaults=data
+        )
         return JsonResponse(AttendanceSerializer(attendance).data)
 
     @action(['get'], detail=False)
