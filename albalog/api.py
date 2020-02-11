@@ -404,9 +404,9 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         # 법정휴일이나 연차 사용일은 유급휴일로서, 근로한 것으로 인정해서 총 근로시간에 포함시켜줌
         queryset = queryset.filter(absence=True, reason__in=[0, 2], date__year=year, date__month=month)
         paid_leave_sum = None
-        if queryset.count():
+        if queryset.exists():
+            from datetime import date
             for q in queryset:
-                from datetime import date
                 original_duration = datetime.combine(date.today(), q.timetable.end_time) - datetime.combine(date.today(), q.timetable.start_time)
                 paid_leave_sum = paid_leave_sum + original_duration if paid_leave_sum else original_duration
 
