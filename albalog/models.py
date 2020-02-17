@@ -48,21 +48,21 @@ class Member(models.Model):
         ('inactive', '퇴사'),
     ]
     Days = (
-        ('0', '월'),
-        ('1', '화'),
-        ('2', '수'),
-        ('3', '목'),
-        ('4', '금'),
-        ('5', '토'),
-        ('6', '일')
+        (0, '월'),
+        (1, '화'),
+        (2, '수'),
+        (3, '목'),
+        (4, '금'),
+        (5, '토'),
+        (6, '일')
     )
     type = models.CharField('권한', choices=Types, max_length=10, default='member')
     business = models.ForeignKey(Business, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
-    hourly_wage = models.IntegerField('시급', null=True, blank=True)
+    hourly_wage = models.PositiveIntegerField('시급', null=True, blank=True)
     status = models.CharField('상태', choices=Statuses, max_length=10, default='active')
-    annual_leave = models.IntegerField('연차', blank=True, default=0)
-    weekly_holiday = models.CharField('주휴일', choices=Days, max_length=1,  blank=True, default=6)
+    annual_leave = models.PositiveSmallIntegerField('연차', blank=True, default=0)
+    weekly_holiday = models.PositiveSmallIntegerField('주휴일', choices=Days, default=6)
     start_date = models.DateField('입사일', blank=True)
     resignation_date = models.DateField('퇴사일', null=True, blank=True)
     national_pension = models.BooleanField(default=False)
@@ -118,7 +118,7 @@ class HolidayPolicy(models.Model):
     business = models.ForeignKey(Business, on_delete=models.DO_NOTHING)
     type = models.CharField('종류', choices=Choices, max_length=10)
     paid = models.BooleanField('유급 여부', default=False)
-    memo = models.TextField('비고', max_length=50, null=True, blank=True)
+    memo = models.TextField('비고', max_length=50, blank=True, default='')
 
 
 class Attendance(models.Model):
@@ -210,13 +210,13 @@ def calculate_duration_and_detect_timetable(sender, instance, **kwargs):
 
 class PayRoll(models.Model):
     member = models.ForeignKey(Member, on_delete=models.DO_NOTHING)
-    year = models.IntegerField()
-    month = models.IntegerField()
-    working_hours = models.IntegerField('월 근로시간')
-    working_days = models.IntegerField('월 근로일수')
-    base_salary = models.IntegerField('기본급')
-    weekly_holiday_allowance = models.IntegerField('주휴수당', null=True, blank=True)
-    gross_pay = models.IntegerField('지급액계')
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    working_hours = models.PositiveSmallIntegerField('월 근로시간')
+    working_days = models.PositiveSmallIntegerField('월 근로일수')
+    base_salary = models.PositiveIntegerField('기본급')
+    weekly_holiday_allowance = models.PositiveIntegerField('주휴수당', null=True, blank=True)
+    gross_pay = models.PositiveIntegerField('지급액계')
     national_pension = models.IntegerField('국민연금', null=True, blank=True)
     health_insurance = models.IntegerField('건강보험', null=True, blank=True)
     long_term_care_insurance = models.IntegerField('장기요양보험', null=True, blank=True)
