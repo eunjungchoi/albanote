@@ -1,6 +1,6 @@
 Django>=2.2.9
 pytz==2019.3
-sqlparse==0.4.4
+sqlparse>=0.5.1
 djangorestframework
 django-rest-auth
 django-allauth
